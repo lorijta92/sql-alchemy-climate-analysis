@@ -39,7 +39,8 @@ def home():
     f"<ul><li>Start - <code>/api/v1.0/<start></code></li></ul>"
     f"<ul><li>Start and End - <code>/api/v1.0/<start>/<end></code></li></ul>")
 
-# Precipitation Route
+
+# 1) Precipitation Route
 @app.route("/api/v1.0/precipitation")
 def precipitation():
     
@@ -55,50 +56,66 @@ def precipitation():
         prcp_dict[date] = prcp
         prcp_list.append(prcp_dict) 
 
-    session.close() #close session before return
+    session.close()
 
+    # Return the list of dates and precipitation
     return jsonify(prcp_list)
     
-    # "finally: session.close()" - 'finally' used after exceptions, no need for it if not using exception
-    
 
-# Stations Route
+
+# 2) Stations Route
 @app.route("/api/v1.0/stations")
 def stations():
+    
+    # Query all distinct stations
     session = Session(engine)
     results = session.query(Measurement.station).distinct().all()
     
+    # Store results as a list
     stations_list = list(np.ravel(results))
 
     session.close()
 
+    # Return a list of all distinct stations
     return jsonify(stations_list)
 
 
-# Temperature Observation Routes
+
+# 3) Temperature Observation Routes
 @app.route("/api/v1.0/tobs")
 def tobs():
     
-    # Query dates
+    # Query all dates
     session = Session(engine)
     dates = session.query(Measurement.date).all()
     
+    # Extract and store the start and end dates of one year's data
     last_date = dates[-1][0]
     end_dt = dt.datetime.strptime(last_date, '%Y-%m-%d')
     end_dt = end_dt.date()
     start_dt = end_dt - dt.timedelta(days=365)
     
-    tobs = session.query(Measurement.date, Measurement.tobs).\
+    # Query one year's worth of temperature observations
+    results = session.query(Measurement.date, Measurement.tobs).\
         filter(Measurement.date>=start_dt).\
         filter(Measurement.date<=end_dt).all()
     
+    # Create a dictionary using 'date' as the key and 'tobs' as the value
+    tobs_list = []
+
+    for date, tobs in results:
+        tobs_dict = {}
+        tobs_dict[date] = tobs
+        tobs_list.append(tobs_dict) 
+
     session.close()
 
-    return jsonify(tobs)
+    # Return the list of dates and temperature observations
+    return jsonify(tobs_list)
 
 
 
-# TMIN, TAVG, TMAX with only start date
+# 4) TMIN, TAVG, TMAX with only start date
 @app.route("/api/v1.0/<start>")
 def start(start):
     
@@ -112,7 +129,7 @@ def start(start):
     # Create empty list to hold minimum temperature, average temperature, and maximum temperature
     temps_list = []
 
-    # Use for loop to append the empty tobs_list with dictionaries of dates and temperature observations
+    # Append the empty tobs_list with dictionaries of dates and temperature observations
     for date, temp in results:
         tobs_dict = {}
         tobs_dict["date"] = date
@@ -146,7 +163,7 @@ def start(start):
 
 
 
-# TMIN, TAVG, TMAX with start and end dates
+# 5) TMIN, TAVG, TMAX with start and end dates
 @app.route("/api/v1.0/<start>/<end>")
 def start_end(start, end):
     
@@ -163,10 +180,10 @@ def start_end(start, end):
         tobs_dict["temp"] = temp
         tobs_list.append(tobs_dict) 
 
-    for item in tobs_list:
-        search_term = item["date"]
+    # for item in tobs_list:
+    #     search_term = item["date"]
 
-    if all(i in tobs_list for i in (start, end)):
+    if all(x in tobs_list for x in [start, end]):
         calc_temps = session.query(func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs)).\
             filter(Measurement.date >= start).filter(Measurement.date <= end).all()
 
@@ -181,7 +198,9 @@ def start_end(start, end):
 
     session.close()
 
-    return jsonify({"error": f"The dates {start} and {end} were not found."}), 404
+    return jsonify({"error": f"The dates {start} or {end} were not found."}), 404
+
+
 
 if __name__ == "__main__":
     app.run(debug=True)
