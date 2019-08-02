@@ -126,9 +126,6 @@ def start(start):
     # Create empty list to hold dates and temperature observations
     tobs_list = []
 
-    # Create empty list to hold minimum temperature, average temperature, and maximum temperature
-    temps_list = []
-
     # Append the empty tobs_list with dictionaries of dates and temperature observations
     for date, temp in results:
         tobs_dict = {}
@@ -152,11 +149,10 @@ def start(start):
                 temps_dict["Minimum Temperature"] = tmin 
                 temps_dict["Average Temperature"] = tavg
                 temps_dict["Maximum Temperature"] = tmax
-                temps_list.append(temps_dict)
 
-            return jsonify(temps_list)
-
-    session.close()
+            session.close()
+            
+            return jsonify(temps_dict)
 
     # Return error message if the date inputted by the user is not apart of the data set
     return jsonify({"error": f"The date {start} was not found."}), 404
@@ -169,36 +165,20 @@ def start_end(start, end):
     
     # Query dates and temperature observations
     session = Session(engine)
-    results = session.query(Measurement.date, Measurement.tobs).all()
-
-    tobs_list = []
-    temps_list = []
-
-    for date, temp in results:
-        tobs_dict = {}
-        tobs_dict["date"] = date
-        tobs_dict["temp"] = temp
-        tobs_list.append(tobs_dict) 
-
-    # for item in tobs_list:
-    #     search_term = item["date"]
-
-    if all(x in tobs_list for x in [start, end]):
-        calc_temps = session.query(func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs)).\
-            filter(Measurement.date >= start).filter(Measurement.date <= end).all()
-
-        for tmin, tavg, tmax in calc_temps:
-            temps_dict = {}
-            temps_dict["Minimum Temperature"] = tmin 
-            temps_dict["Average Temperature"] = tavg
-            temps_dict["Maximum Temperature"] = tmax
-            temps_list.append(temps_dict)
-
-        return jsonify(temps_list)
-
+    calc_temps = session.query(func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs)).\
+        filter(Measurement.date >= start).filter(Measurement.date <= end).all()
+    
+    for tmin, tavg, tmax in calc_temps:
+        temps_dict = {}
+        temps_dict["Minimum Temperature"] = tmin 
+        temps_dict["Average Temperature"] = tavg
+        temps_dict["Maximum Temperature"] = tmax
+    
     session.close()
 
-    return jsonify({"error": f"The dates {start} or {end} were not found."}), 404
+    return jsonify(temps_dict)
+
+    # return jsonify({"error": f"The dates {start} or {end} were not found."}), 404 #if query returns 0 then this//detect # of rows in results
 
 
 
