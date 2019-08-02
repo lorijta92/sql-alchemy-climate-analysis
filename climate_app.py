@@ -5,7 +5,6 @@ from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import Session
 from sqlalchemy import create_engine, func
 import datetime as dt
-from sqlalchemy import and_
 
 from flask import Flask, jsonify
 
@@ -36,8 +35,13 @@ def home():
     f"<ul><li>Precipitation - <code>/api/v1.0/precipitation</code></li></ul>"
     f"<ul><li>Stations - <code>/api/v1.0/stations</code></li></ul>"
     f"<ul><li>Temperature Observations - <code>/api/v1.0/tobs</code></li></ul>"
-    f"<ul><li>Start - <code>/api/v1.0/<start></code></li></ul>"
-    f"<ul><li>Start and End - <code>/api/v1.0/<start>/<end></code></li></ul>")
+    f"<ul><li>Calculated Temperatures (Single Date) - <code>/api/v1.0/start</code></li></ul>"
+    f"<ul><li>Calculated Temperatures (Dual Dates) - <code>/api/v1.0/start/end</code></li></ul>"
+    f""
+    f"The <b>Calculated Temperatures</b> route will return the minimum, average, and maximum temperatures of the date range given. "
+    f"<br>If a single date is given, temperatures will be calculated for all dates equal to or greater than the date given. "
+    f"<br>If two dates are given, temperatures will be calculated for all dates between the two given, inclusively. "
+    f"<br>To use these routes, replace <code>start</code> and <code>end</code> with dates in YYYY-MM-DD format.")
 
 
 # 1) Precipitation Route
@@ -151,7 +155,7 @@ def start(start):
                 temps_dict["Maximum Temperature"] = tmax
 
             session.close()
-            
+
             return jsonify(temps_dict)
 
     # Return error message if the date inputted by the user is not apart of the data set
@@ -168,18 +172,21 @@ def start_end(start, end):
     calc_temps = session.query(func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs)).\
         filter(Measurement.date >= start).filter(Measurement.date <= end).all()
     
+    session.close()
+    
     for tmin, tavg, tmax in calc_temps:
         temps_dict = {}
         temps_dict["Minimum Temperature"] = tmin 
         temps_dict["Average Temperature"] = tavg
         temps_dict["Maximum Temperature"] = tmax
-    
-    session.close()
 
-    return jsonify(temps_dict)
+        # Check for null values/dates given outside of data set
+        condition = all([x == None for x in list(temps_dict.values())])
 
-    # return jsonify({"error": f"The dates {start} or {end} were not found."}), 404 #if query returns 0 then this//detect # of rows in results
-
+        if condition: 
+            return jsonify({"error": f"The dates {start} or {end} were not found."}), 404
+        else:
+            return jsonify(temps_dict)
 
 
 if __name__ == "__main__":
