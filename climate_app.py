@@ -125,41 +125,23 @@ def start(start):
     
     # Query dates and temperature observations
     session = Session(engine)
-    results = session.query(Measurement.date, Measurement.tobs).all()
 
-    # Create empty list to hold dates and temperature observations
-    tobs_list = []
+     # Select first and last dates of the data set
+    date_start = session.query(func.min(Measurement.date)).first()[0]
+    date_end = session.query(func.max(Measurement.date)).first()[0]
 
-    # Append the empty tobs_list with dictionaries of dates and temperature observations
-    for date, temp in results:
-        tobs_dict = {}
-        tobs_dict["date"] = date
-        tobs_dict["temp"] = temp
-        tobs_list.append(tobs_dict) 
-
-    # Use for loop to iterate through the list and set the value of search_term
-    for item in tobs_list:
-        search_term = item["date"]
+    # Calculate temperatures if the input date is in the data set
+    if start >= date_start and start <= date_end:
+        calc_temps = session.query(func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs)).\
+            filter(Measurement.date >= start).filter(Measurement.date <= date_end).all()[0]
     
-        # If the search term is the same as the argument inputted by the user
-        # Calculate TMIN, TAVG, TMAX  for all dates greater than or equal to the argument
-        if search_term == start:
-            calc_temps = session.query(func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs)).\
-                filter(Measurement.date >= start).all()
-
-            # Store calculations in a list and return as a JSON object
-            for tmin, tavg, tmax in calc_temps:
-                temps_dict = {}
-                temps_dict["Minimum Temperature"] = tmin 
-                temps_dict["Average Temperature"] = tavg
-                temps_dict["Maximum Temperature"] = tmax
-
-            session.close()
-
-            return jsonify(temps_dict)
-
-    # Return error message if the date inputted by the user is not apart of the data set
-    return jsonify({"error": f"The date {start} was not found."}), 404
+        return (
+            f"Min temp: {calc_temps[0]}</br>"
+            f"Avg temp: {calc_temps[1]}</br>"
+            f"Max temp: {calc_temps[2]}")
+    
+    else:
+        return jsonify({"error": f"The date {start} was not found. Please select a date between 2010-01-01 and 2017-08-23."}), 404
 
 
 
@@ -169,25 +151,24 @@ def start_end(start, end):
     
     # Query dates and temperature observations
     session = Session(engine)
-    calc_temps = session.query(func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs)).\
-        filter(Measurement.date >= start).filter(Measurement.date <= end).all()
+
+    # Select first and last dates of the data set
+    date_start = session.query(func.min(Measurement.date)).first()[0]
+    date_end = session.query(func.max(Measurement.date)).first()[0]
+
+    # Calculate temperatures if the input dates are in the data set
+    if start >= date_start and end <= date_end:
+        calc_temps = session.query(func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs)).\
+            filter(Measurement.date >= start).filter(Measurement.date <= end).all()[0]
     
-    session.close()
+        return (
+            f"Min temp: {calc_temps[0]}</br>"
+            f"Avg temp: {calc_temps[1]}</br>"
+            f"Max temp: {calc_temps[2]}")
     
-    for tmin, tavg, tmax in calc_temps:
-        temps_dict = {}
-        temps_dict["Minimum Temperature"] = tmin 
-        temps_dict["Average Temperature"] = tavg
-        temps_dict["Maximum Temperature"] = tmax
-
-        # Check for null values/dates given outside of data set
-        condition = all([x == None for x in list(temps_dict.values())])
-
-        if condition: 
-            return jsonify({"error": f"The dates {start} or {end} were not found."}), 404
-        else:
-            return jsonify(temps_dict)
-
+    else:
+        return jsonify({"error": f"The dates {start} or {end} were not found. Please select dates between 2010-01-01 and 2017-08-23."}), 404
+            
 
 if __name__ == "__main__":
     app.run(debug=True)
