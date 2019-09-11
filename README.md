@@ -46,3 +46,6 @@ A function (`daily_normals`) was first created to query the minimum, average, an
 To store this information in a data frame, I created empty lists to store the minimum, average, and maximum temperatures, and the daily normals. I appended each value to its respective list using for loops, and use those now populated lists to create a data frame. From that data frame, I plotted the data in a stacked area plot. 
 
 ![daily-norms]( https://github.com/lorijta92/sql-alchemy-climate-analysis/blob/master/Images/daily-norms.png?raw=true)
+
+
+## Flask API
