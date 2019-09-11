@@ -30,3 +30,9 @@ For this analysis, I wanted to retrieve and plot the minimum, average, and maxim
 ![calc-temps]( https://github.com/lorijta92/sql-alchemy-climate-analysis/blob/master/Images/calc-temps.png?raw=true)
 
 Next, I gathered the total amount of rainfall for each station and displayed that alongside other key facts (station name, latitude, longitude, and elevation) for each station. Because this data was stored in two separate tables, I merged the tables on “station” using `.filter(Measurement.station == Station.station)`. 
+
+**Temperature**
+
+This analysis was to answer the question, “Is a statistically significant difference between average temperatures in June and December?” To accomplish this using Pandas, I read in a csv file with the necessary data, extracted the month from the date column, and then filtered for the June and December months. Before performing a t-test on these two samples, I first checked the length of the samples to see if they were equal. Because the June sample (1700) was longer than the December sample (1517), I took a random sampling of 1517 data points in the June sample in order to match sample sizes. I then performed a paired t-test, as both sample sets were from the same “subject” or station. This test returned a p-value less than 0.05, so I can confidently assume that there is a statistically significant difference between the average temperatures in June and December. 
+
+I repeated the calculation using SQLAlchemy as well, and also received a p-value less than 0.05 (though a different value as the June sample was randomly selected). 
