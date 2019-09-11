@@ -1,16 +1,17 @@
-## Goal
+# Goal
 Use Python, SQLAlchemy, Pandas, and Matplotlib to do basic climate analysis and data exploration. Then design a Flask API based on those queries. 
 
-## Process
+# Process
+## Analysis with SQLAlchemy
 To start the analysis, I first had to access the data by creating an engine with `create_engine`, reflecting the database with `automap_base()`, reflecting the tables with `Base.prepare(engine, reflect=True)`, and then creating a session with `Session(engine)`.
 
-**Precipitation Analysis**
+**Precipitation**
 
 After the data was accessed, I moved onto the precipitation analysis: plotting the precipitation data from the last 12 months. I first queried the precipitation data for the most recent date with `session.query()` and sorted the results in descending before grabbing the first result. I then converted that result into a datetime object named `entered_date`. Using `entered_date`, I calculated the date from one year ago using `dt.timedelta()`. With these two date endpoints as filters, I was able to retrieve a year’s worth of data. The results were stored in a variable `one_year_prcp`, which I used to make a data frame with `pd.DataFrame()`. From that data frame, I plotted the precipitation data.
 
 ![precipitation](https://github.com/lorijta92/sql-alchemy-climate-analysis/blob/master/Images/precipitation.png?raw=true)
 
-**Station Analysis**
+**Station**
 
 Next was the station analysis in which I wanted to retrieve the total number of weather stations, rank them by activity level, and find the minimum, average, and maximum temperatures of the most active station. To find the total number of weather stations, I queried all stations and then used `.distinct()` and `.count()` to count the number of unique stations found in the data set.
 
@@ -22,7 +23,7 @@ As a visual, I also wanted to display a histogram of the temperature observation
 
 ![histogram](https://github.com/lorijta92/sql-alchemy-climate-analysis/blob/master/Images/station-histogram.png?raw=true)
 
-**Comparative Dates Analysis**
+**Comparative Dates**
 
 For this analysis, I wanted to retrieve and plot the minimum, average, and maximum temperatures for a selected two week period. A function was created to calculate those temperatures based on two parameters: the start and end dates. A bar chart was then created to display the average temperature, with an error bar based on the maximum and minimum temperature difference. 
 
