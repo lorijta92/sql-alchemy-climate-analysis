@@ -36,3 +36,13 @@ Next, I gathered the total amount of rainfall for each station and displayed tha
 This analysis was to answer the question, “Is a statistically significant difference between average temperatures in June and December?” To accomplish this using Pandas, I read in a csv file with the necessary data, extracted the month from the date column, and then filtered for the June and December months. Before performing a t-test on these two samples, I first checked the length of the samples to see if they were equal. Because the June sample (1700) was longer than the December sample (1517), I took a random sampling of 1517 data points in the June sample in order to match sample sizes. I then performed a paired t-test, as both sample sets were from the same “subject” or station. This test returned a p-value less than 0.05, so I can confidently assume that there is a statistically significant difference between the average temperatures in June and December. 
 
 I repeated the calculation using SQLAlchemy as well, and also received a p-value less than 0.05 (though a different value as the June sample was randomly selected). 
+
+**Daily Normals**
+
+Lastly, I wanted to calculate and plot the daily normals (the averages for the minimum, average, and maximum temperatures for all historical data matching a specified month and day) for the same two-week period I used in the comparative dates analysis. 
+
+A function (`daily_normals`) was first created to query the minimum, average, and maximum temperature observations for a given date. Then, I used the start and end date variables from the comparative dates analysis to create a range of dates with `pd.date_range()` and then converted the data to strings and stripped off the year, storing the month and day in a list. I then calculated the daily normals by iterating through that list using a list comprehension, passing each object through the `daily_normals` function and storing the results in another list, `normals`.
+
+To store this information in a data frame, I created empty lists to store the minimum, average, and maximum temperatures, and the daily normals. I appended each value to its respective list using for loops, and use those now populated lists to create a data frame. From that data frame, I plotted the data in a stacked area plot. 
+
+![daily-norms]( https://github.com/lorijta92/sql-alchemy-climate-analysis/blob/master/Images/daily-norms.png?raw=true)
