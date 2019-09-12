@@ -49,3 +49,15 @@ To store this information in a data frame, I created empty lists to store the mi
 
 
 ## Flask API
+
+Five routes were created for this API.
+
+The **first route** is a precipitation route that returns all precipitation levels and dates in the data set. Dates and precipitation levels were queried using SQLAlchemy and stored in a list, `results`. Before extracting from `results`, I created an empty list that would store all the data. Then, inside a for loop, I created an empty dictionary and I iterated through `results`, using the date as the key, and the precipitation level as the value. Each dictionary was then appended to the list before moving onto the next iteration. 
+
+The **second route** returns a list of all unique station codes. Distinct stations were queried  with SQLAlchemy and the results converted into a list using `list(np.ravel())`.
+
+The **third route** returns a year’s worth of temperature observations with respective dates. All dates were first queried, and then the last, most recent date was stored in a variable `last_date`. `last_date` was then converted into a datetime object in order to use `dt.timedelta()` to calculate one year prior to `last_date`. Then temperature observations and dates were queried, using those two date endpoints as filters. To return the results, the same technique used in the first route was repeated; iterating through the results, appending to an empty dictionary using the date as the key and temperature observation as the value, and appending that dictionary to an empty list outside of the for loop. 
+
+The **fourth route** returns the minimum, average, and maximum temperatures based on a start date given by the user. Temperatures are calculated using the start date through the end of the data set. Because there are limited dates in the data set, a conditional was used to return an error message if the user selected a date outside of the data set. This was done by querying the first and last dates of the data set and checking the user input against that range (if the user input date is greater than or equal to the latest date in the data set, but also less than or equal to the most recent date in the data set). If this condition was met, then then temperatures were calculated and returned. 
+
+The **fifth route** is the same as the fourth route, but also takes and end date rather than using the last data point in the available data set. A similar condition was used, checking that the user input start date is greater than or equal to the latest date in the data set and that the user input end date is less than or equal to the latest date in the data set.
